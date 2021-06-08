@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link href="tailwind.css" rel="stylesheet"/>
+    <title>cloudmobility</title>
+</head>
+<body class="bg-gray-600">
+<main>
+    <nav class="bg-black p-10">
+        <div class="container mx-auto max-w-md">
+            <img src="https://cloudmobility.io/static/579c7ecdcddbb55866d72cb8f374c16a/cloudmobilityLogo.svg"/>
+        </div>
+
+    </nav>
+    <div class="container mx-auto max-w-md">
+        <div class="my-4 border-b-2 border-green-500 pb-4">
+            <h2 class="mb-2 text-xl text-white font-medium">
+                Write your message!
+            </h2>
+            <div class="flex mb-2">
+                <input
+                        class="p-2 rounded-md w-full mr-2"
+                        id="name"
+                        placeholder="Insert your name"
+                        type="text"
+                />
+                <input
+                        class="p-2 rounded-md w-full"
+                        id="message"
+                        placeholder="Your message"
+                        type="text"
+                />
+            </div>
+            <button class="px-8 py-2 bg-green-500 rounded-md" id="submit" type="button">
+                Create
+            </button>
+        </div>
+    </div>
+
+    <div class="container mx-auto max-w-md">
+
+        <h2 class="mb-3 text-2xl text-green-500 font-bold flex items-center py-2">
+            <span id="count">0</span>&nbsp;messages
+
+            <button
+                    class="ml-2 px-8 py-2 bg-green-500 text-black rounded-md text-sm"
+                    id="get-new"
+                    type="button"
+            >
+                Get new
+            </button>
+        </h2>
+        <div id="entries"></div>
+    </div>
+</main>
+</body>
+
+<script type="module">
+  const jsonHeaders = new Headers();
+  jsonHeaders.set('content-type', 'application/json');
+
+  document.querySelector('#submit').addEventListener('click', async () => {
+    const name = document.querySelector('#name');
+    const message = document.querySelector('#message');
+    await createEntry({ name: name.value, message: message.value });
+
+    name.disabled = true;
+    message.value = '';
+  });
+
+  document.querySelector('#get-new').addEventListener('click', () => {
+    getEntries();
+  });
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    getEntries();
+  });
+
+  async function getEntries() {
+    const result = await fetch('/entries', {
+      headers: jsonHeaders,
+    }).then((r) => r.json());
+
+    document.querySelector('#entries').innerHTML = '';
+
+    document.querySelector('#count').innerHTML = result.entries.length;
+
+    result.entries.reverse().forEach((entry) => {
+      const entryEl = document.createElement('div');
+      entryEl.innerHTML = `
+        <div class="max-w-md mx-auto bg-gray-500 rounded-xl shadow-md overflow-hidden md:max-w-2xl mb-2">
+          <div class="md:flex">
+            <div class="p-8">
+              <div class="tracking-wide text-sm text-white font-semibold">Message<div>
+              <a href="#" class="block mt-1 text-lg leading-tight font-medium text-gray-400 hover:underline">${entry.name}</a>
+              <p class="mt-2 text-gray-400">${entry.message}</p>
+              <p class="mt-1 text-gray-400 text-xs text-opacity-40">${entry.createdAt}</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.querySelector('#entries').appendChild(entryEl);
+    });
+  }
+
+  async function createEntry({ name, message }) {
+    if (!name || !message) {
+      throw new Error('You have to add a name and a message');
+    }
+
+    await fetch('/entries', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        name,
+        message,
+      }),
+    });
+
+    await getEntries();
+  }
+</script>
+</html>

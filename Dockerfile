@@ -1,5 +1,8 @@
-
 FROM hayd/alpine-deno:1.6.0
+
+RUN apk update
+RUN apk upgrade
+RUN apk add curl 
 
 WORKDIR /app
 
